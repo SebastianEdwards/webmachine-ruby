@@ -428,17 +428,40 @@ describe Webmachine::Decision::Flow do
     end
   end
 
+  describe "#g8 (Precondition requirement)" do
+    let(:resource) { default_resource }
+    it "should skip precondition requirement by default" do
+      headers['If-Match'].should be_nil
+      subject.run
+      response.code.should_not == 428
+    end
+    context "precondtion is required" do
+      let(:resource) { resource_with { def precondition_required?; true; end } }
+      it "should reply with 428 when If-Match is missing" do
+        headers['If-Match'].should be_nil
+        subject.should_not_receive(:g9)
+        subject.should_not_receive(:g11)
+        subject.run
+        response.code.should == 428
+      end
+      it "should not reply with 428 when If-Match is present" do
+        headers['If-Match'] = '"etag"'
+        subject.run
+        response.code.should_not == 428
+      end
+    end
+  end
+
   # Conditional requests/preconditions
-  describe "#g8, #g9, #g10 (ETag match)" do
+  describe "#g9, #g10, #g11 (ETag match)" do
     let(:resource) { resource_with { def generate_etag; "etag"; end } }
     it "should skip ETag matching when If-Match is missing" do
       headers['If-Match'].should be_nil
       subject.should_not_receive(:g9)
-      subject.should_not_receive(:g11)
       subject.run
       response.code.should_not == 412
     end
-    it "should not reply with 304 when If-Match is *" do
+    it "should not reply with 412 when If-Match is *" do
       headers['If-Match'] = "*"
       subject.run
       response.code.should_not == 412

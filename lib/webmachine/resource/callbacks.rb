@@ -354,6 +354,24 @@ module Webmachine
         nil
       end
 
+      # If this request requires a precondition to be given, this method
+      # should return true. Default is false.
+      # @api callback
+      # @return [true,false] whether the precondition is required
+      def precondition_required?
+        false
+      end
+
+      # Checks if the request provides required precondition , this method
+      # should return true. Default will check for an If-Match header.
+      # @api callback
+      # @return [true,false] whether the precondition is present
+      def precondition_present?
+        request.headers['if-match'] &&
+        request.headers['if-match'].length > 0 &&
+        request.headers['if-match'] != '*'
+      end
+
       # This method is called just before the final response is
       # constructed and sent. The return value is ignored, so any effect
       # of this method must be by modifying the response.

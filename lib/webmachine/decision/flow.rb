@@ -228,13 +228,22 @@ module Webmachine
         decision_test(resource.resource_exists?, :g8, :h7)
       end
 
-      # If-Match exists?
+      # Precondition required?
       def g8
-        request.if_match ? :g9 : :h10
+        if resource.precondition_required?
+          resource.precondition_present? ? :g9 : 428
+        else
+          :g9
+        end
+      end
+
+      # If-Match exists?
+      def g9
+        request.if_match ? :g10 : :h10
       end
 
       # If-Match: * exists?
-      def g9
+      def g10
         quote(request.if_match) == '"*"' ? :h10 : :g11
       end
 
